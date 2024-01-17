@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import axios from "axios";
 
-function App() {
-  const [count, setCount] = useState(0)
+const FileUploadComponent = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploaded, setUploaded] = useState(null);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    axios.post("http://localhost:3000/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (data) => {
+          setUploaded(Math.round((data.loaded / data.total) * 100));
+        },
+      }).then((response) => {
+        console.log(response.data);
+      }).catch((error) => {
+        console.error("Error uploading file:", error);
+      });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload</button>
+      {uploaded && (
+          <div className="progress mt-2">
+            <div
+              className="progress-bar"
+              role="progressbar"
+              aria-valuenow={uploaded}
+              aria-valuemin="0"
+              aria-valuemax="100"
+              style={{ width: `${uploaded}%` }}
+            >
+              {`${uploaded}%`}
+            </div>
+          </div>
+        )}
 
-export default App
+    </div>
+  );
+};
+
+export default FileUploadComponent;
